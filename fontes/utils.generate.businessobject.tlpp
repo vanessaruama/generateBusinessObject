@@ -1,0 +1,182 @@
+#include "fw-tlpp-rest.th"
+#include "protheus.ch"
+#include "totvs.framework.treports.integratedprovider-endpoints.th"
+#include "shell.ch"
+
+namespace utils.generate.businessobject
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} createBusinessObjforTReports
+Cria um objeto de negócio através de um arquivo tlpp com as informações passadas
+
+@param cName, character, nome que será dado ao arquivo .tlpp e a classe do objeto de negócio
+@param cDisplayName, character, nome que será exibido no TReports
+@param cDescription, character, descrição que será exibido no TReports
+@param cArea, character, área que será exibido no TReports
+@param cAlias, character, alias da tabela que será utilizada
+@param aFields, campos que irão fazer parte do objeto de negócio
+@param cFullPath, caminho completo de onde será gravado o arquivo .tlpp [opcional] [default = /spool] [formato = barra para direita (/)]
+
+@author Vanessa Ruama
+@since 11/04/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+function createBusinessObjforTReports(cName, cDisplayName, cDescription, cArea, cAlias, aFields, cFullPath)
+local oFile as object
+local cBaseObject as character
+local cPathFile as character
+
+    if empty(cName)
+        Conout("Parâmetro cName é obrigatório, o objeto de negócio não será gerado")
+        return
+    endif
+
+    if !empty(cAlias) .and. empty(aFields)
+        aFields := getFldsByAlias(cAlias)
+    endif
+
+    if empty(cDescription) 
+        cDescription := cName
+    endif
+
+    if !empty(cName) .and. !empty(aFields)
+        cBaseObject := getBaseObj(cName, cDisplayName, cDescription, cArea, cAlias, aFields)
+    else
+        Conout("Erro na criação do objeto de negócio")
+    endif
+
+    if !empty(cFullPath)
+        cPathFile := cFullPath + "/" + cName + ".tlpp"
+        oFile := FwFileWriter():New(cPathFile)
+    else
+        cPathFile := GetSrvProfString("RootPath","") + "/spool/" + cName + ".tlpp"
+        cPathFile := StrTran(cPathFile, "\", "/")
+        oFile := FwFileWriter():New(cPathFile)
+    endif
+
+    if oFile:Create()
+        oFile:Write( cBaseObject )
+        oFile:Close()
+        openFile(cPathFile)
+    else
+        Conout("Erro ao criar arquivo")
+    endif
+return
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getFldsByAlias
+Recupera os campos a partir do alias que foi passado
+
+@param cAlias, character, alias da tabela que será utilizada
+
+@return aFields, array, array com os campos da tabela
+
+@author Vanessa Ruama
+@since 11/04/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+static function getFldsByAlias(cAlias)
+local cWorkArea as character
+local nX as numeric
+local aStruct as array
+local aFields as array
+
+cWorkArea := Alias()
+dbSelectArea(cAlias)
+aFields := {}
+aStruct := DBStruct()
+
+for nX := 1 to Len(aStruct)
+    aAdd(aFields, aStruct[nX][1])
+next
+
+FWRestAlias(cWorkArea)
+
+return aFields
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getBaseObj
+Constroi a escrita do arquivo .tlpp
+
+@param cName, character, nome que será dado ao arquivo .tlpp e a classe do objeto de negócio
+@param cDisplayName, character, nome que será exibido no TReports
+@param cDescription, character, descrição que será exibido no TReports
+@param cArea, character, área que será exibido no TReports
+@param cAlias, character, alias da tabela que será utilizada
+@param aFields, campos que irão fazer parte do objeto de negócio
+
+@return cBaseObject, character, escrita do arquivo
+
+@author Vanessa Ruama
+@since 11/04/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+static function getBaseObj(cName, cDisplayName, cDescription, cArea, cAlias, aFields)
+local cBaseObject as character
+
+cBaseObject := ""
+
+cBaseObject := '#include "msobject.ch"' +  CRLF
+cBaseObject += '#include "protheus.ch"' +  CRLF
+cBaseObject += '#include "totvs.framework.treports.integratedprovider.th"' +  CRLF
+cBaseObject += CRLF
+cBaseObject += 'namespace custom.treports.businessobject' + CRLF
+cBaseObject += CRLF
+cBaseObject += '@totvsFrameworkTReportsIntegratedProvider(active=.T.)' + CRLF
+cBaseObject += 'class ' + cName + ' from totvs.framework.treports.integratedprovider.IntegratedProvider' + CRLF
+cBaseObject += '    public method new() as object' + CRLF
+cBaseObject += '    public method getData() as object' + CRLF
+cBaseObject += '    public method getSchema() as object' + CRLF
+cBaseObject += 'endclass' + CRLF
+cBaseObject += CRLF
+cBaseObject += 'method new() class ' + cName + CRLF
+cBaseObject += '_Super:new()' + CRLF
+cBaseObject += 'self:appendArea("' + cArea + '")' + CRLF
+cBaseObject += 'self:setDisplayName("' + cDisplayName + '")' + CRLF
+cBaseObject += 'self:setDescription("' + cDescription + '")' + CRLF
+cBaseObject += 'return self' + CRLF
+cBaseObject += CRLF
+cBaseObject += 'method getData(nPage as numeric, oFilter as object) as object class ' + cName + CRLF
+cBaseObject += 'local cQuery as character' + CRLF
+cBaseObject += 'cQuery := "SELECT #QueryFields# FROM " + RetSQLName("' + cAlias + '") +  " WHERE D_E_L_E_T_ = ' + "' '" + '"' + CRLF
+cBaseObject += 'self:setQuery(cQuery)'+ CRLF
+cBaseObject += 'return self:oData' + CRLF
+cBaseObject += CRLF
+cBaseObject += 'method getSchema() as object class ' + cName + CRLF
+cBaseObject += 'self:oSchema:aliasToSchema("' + cAlias + '", {"' + ArrTokStr(aFields,'","') + '"})' + CRLF
+cBaseObject += 'return self:oSchema' + CRLF
+
+return cBaseObject
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} openFile
+Abre o arquivo que foi criado
+
+@param cFullPath, caminho onde o arquivo foi gravado
+
+@author Vanessa Ruama
+@since 11/04/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+static function openFile(cPathFile)
+local aArea as array
+local nRet as numeric
+
+aArea := FwGetArea()
+    
+nRet := ShellExecute("open", cPathFile,"","",SW_SHOW)
+    
+ShellExecute("open", "explorer.exe", StrTran(cPathFile,"/","\"),"", 1)
+    
+//Se houver algum erro
+if nRet <= 32
+    MsgStop("Não foi possível abrir o arquivo", "Atenção")
+endif 
+    
+FWRestArea(aArea)
+
+return
