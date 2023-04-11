@@ -4,6 +4,7 @@ Criação de uma função que irá facilitar a geração de um objeto de negóci
 # Contextualização
 Esse fonte ajuda na criação de um objeto de negócio que será utilizado na integração Protheus x TReports
 Para mais informações sobre a integração, acessar as documentações: https://tdn.totvs.com/display/public/framework/TReports+no+Protheus
+
 Documentação da classe herdada no exemplo: https://tdn.totvs.com/pages/releaseview.action?pageId=625448935
 
 # Como utilizar
