@@ -34,10 +34,10 @@ Descrição dos parâmetros:
 <p><img align="center" src="https://github.com/vanessaruama/generateBusinessObject/blob/main/gifs/treports.gif" alt="treports" /></p>
 
 # Objeto de negócio criado
-Nome do arquivo criado: sb1businessobject.tlpp
-Classe do objeto de negócio: SB1BusinessObject
-DisplayName: Relatório de Produtos - teste generate
-Descrição: Relatório SB1
-Área: Compras
-Tabela utilizada: SB1
-Campos: B1_COD, B1_FILIAL, B1_TIPO
+Nome do arquivo criado: sb1businessobject.tlpp </p>
+Classe do objeto de negócio: SB1BusinessObject </p>
+DisplayName: Relatório de Produtos - teste generate </p>
+Descrição: Relatório SB1 </p>
+Área: Compras </p>
+Tabela utilizada: SB1 </p>
+Campos: B1_COD, B1_FILIAL, B1_TIPO </p>
