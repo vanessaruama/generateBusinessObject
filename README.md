@@ -13,3 +13,9 @@ Documentação da classe herdada no exemplo: https://tdn.totvs.com/pages/release
 3. Chamar a user function para executar a criação do objeto (u_createBO)
 4. Compilar o arquivo .tlpp que foi criado
 5. Acessar o TReports e utilizar o objeto de negócio
+
+# Compilando os fontes e chamando a user function
+<p><img align="center" src="https://github.com/vanessaruama/generateBusinessObject/blob/main/gifs/generate.gif" alt="generate" /></p>
+
+# Abrindo o objeto de negócio no TReports
+<p><img align="center" src="https://github.com/vanessaruama/generateBusinessObject/blob/main/gifs/treports.gif" alt="treports" /></p>
